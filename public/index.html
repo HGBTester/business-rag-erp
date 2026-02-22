@@ -172,6 +172,37 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .admin-tab{padding:8px 16px;border-radius:6px;border:1px solid var(--surface2);background:none;color:var(--text2);cursor:pointer;font-size:13px}
 .admin-tab.active{border-color:var(--purple);color:var(--purple);background:rgba(139,92,246,.1)}
 
+/* DOCS */
+.docs-layout{display:flex;gap:0;min-height:calc(100vh - 104px)}
+.docs-sidebar{width:260px;background:var(--surface);border-right:1px solid var(--surface2);border-radius:10px 0 0 10px;overflow-y:auto;flex-shrink:0}
+.docs-sidebar-item{padding:12px 16px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--surface2);transition:all .15s;display:flex;align-items:center;gap:8px}
+.docs-sidebar-item:hover{background:var(--surface2)}
+.docs-sidebar-item.active{background:rgba(59,130,246,.15);color:var(--blue);border-left:3px solid var(--blue)}
+.docs-sidebar-item .status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.docs-content{flex:1;background:var(--surface);border-radius:0 10px 10px 0;padding:0;overflow-y:auto;max-height:calc(100vh - 104px)}
+.docs-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--surface2);position:sticky;top:0;background:var(--surface);z-index:5}
+.docs-header h2{font-size:18px}
+.docs-body{padding:24px}
+.docs-rendered{line-height:1.7;font-size:14px}
+.docs-rendered h1{font-size:22px;margin:0 0 16px;padding-bottom:8px;border-bottom:1px solid var(--surface2)}
+.docs-rendered h2{font-size:18px;margin:24px 0 12px;color:var(--blue)}
+.docs-rendered h3{font-size:15px;margin:20px 0 8px;color:var(--cyan)}
+.docs-rendered p{margin:8px 0}
+.docs-rendered ul,.docs-rendered ol{margin:8px 0 8px 24px}
+.docs-rendered li{margin:4px 0}
+.docs-rendered strong{color:var(--text)}
+.docs-rendered code{background:var(--bg);padding:2px 6px;border-radius:3px;font-size:12px;font-family:'Fira Code',monospace}
+.docs-rendered pre{background:var(--bg);padding:16px;border-radius:8px;overflow-x:auto;margin:12px 0;font-size:12px;line-height:1.5}
+.docs-rendered pre code{background:none;padding:0}
+.docs-rendered table{width:100%;border-collapse:collapse;margin:12px 0}
+.docs-rendered th,.docs-rendered td{padding:8px 12px;border:1px solid var(--surface2);text-align:left;font-size:13px}
+.docs-rendered th{background:var(--bg);font-weight:600;color:var(--text2);text-transform:uppercase;font-size:11px}
+.docs-rendered blockquote{border-left:3px solid var(--blue);padding:8px 16px;margin:12px 0;color:var(--text2);background:rgba(59,130,246,.05);border-radius:0 6px 6px 0}
+.docs-rendered hr{border:none;border-top:1px solid var(--surface2);margin:20px 0}
+.docs-editor{width:100%;min-height:500px;background:var(--bg);color:var(--text);border:1px solid var(--surface2);border-radius:8px;padding:16px;font-family:'Fira Code',monospace;font-size:13px;line-height:1.6;resize:vertical}
+.docs-footer{padding:12px 24px;border-top:1px solid var(--surface2);font-size:11px;color:var(--text2)}
+.docs-sidebar-actions{padding:12px;border-top:1px solid var(--surface2)}
+
 /* RESPONSIVE */
 @media(max-width:768px){.domain-grid{grid-template-columns:1fr}.kanban{flex-direction:column}.kanban-col{flex:none;width:100%}.timeline{flex-direction:column}.stage{flex:none;padding-top:0;text-align:left;padding-left:40px;margin-bottom:12px}.stage-dot{left:0;top:0;transform:none}.stage-card{margin:0}}
 
@@ -199,6 +230,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showView('birdseye')">Bird's Eye</button>
             <button class="nav-tab" onclick="showView('mytasks')">My Tasks</button>
+            <button class="nav-tab" onclick="showView('docs')">Docs</button>
             <button class="nav-tab" onclick="showView('admin')" id="adminTab">Admin</button>
         </div>
     </div>
@@ -277,6 +309,28 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     </div>
     <div id="taskListView"></div>
     <div id="taskKanbanView" class="hidden"></div>
+</div>
+
+<!-- ========== DOCS VIEW ========== -->
+<div class="view" id="view-docs">
+    <div class="docs-layout">
+        <div class="docs-sidebar">
+            <div style="padding:14px 16px;font-weight:600;font-size:14px;border-bottom:1px solid var(--surface2)">Documentation</div>
+            <div id="docsSidebar"></div>
+            <div class="docs-sidebar-actions" id="docsActions"></div>
+        </div>
+        <div class="docs-content">
+            <div class="docs-header">
+                <h2 id="docsTitle">Select a section</h2>
+                <div class="flex gap-8" id="docsToolbar"></div>
+            </div>
+            <div class="docs-body">
+                <div id="docsRendered" class="docs-rendered"><p style="color:var(--text2)">Select a section from the left sidebar to view documentation.</p></div>
+                <textarea id="docsEditor" class="docs-editor hidden"></textarea>
+            </div>
+            <div class="docs-footer" id="docsFooter"></div>
+        </div>
+    </div>
 </div>
 
 <!-- ========== ADMIN VIEW ========== -->
@@ -450,6 +504,7 @@ function showView(name) {
     currentView = name;
     if (name === 'birdseye') loadBirdsEye();
     else if (name === 'mytasks') { loadMyTasks(); loadPersonalStats(); }
+    else if (name === 'docs') loadDocs();
     else if (name === 'admin') { loadTemplates(); loadWorkflowDefs(); }
 }
 
@@ -989,6 +1044,195 @@ function showAdminSection(section, btn) {
     else if (section === 'notifications') loadNotifications();
     else if (section === 'leaderboard') loadLeaderboard();
     else if (section === 'startWf') loadWorkflowDefs();
+}
+
+// ==================== DOCUMENTATION ====================
+let docSections = [];
+let activeDocId = null;
+let docEditMode = false;
+
+async function loadDocs() {
+    docSections = await api('/api/docs') || [];
+    renderDocSidebar();
+    if (docSections.length > 0 && !activeDocId) selectDoc(docSections[0].id);
+    else if (activeDocId) selectDoc(activeDocId);
+
+    // Show add button for managers
+    const actionsEl = document.getElementById('docsActions');
+    if (currentUser && currentUser.isManager) {
+        actionsEl.innerHTML = '<button class="btn btn-primary btn-sm" style="width:100%" onclick="addDocSection()">+ Add Section</button>';
+    } else {
+        actionsEl.innerHTML = '';
+    }
+}
+
+function renderDocSidebar() {
+    document.getElementById('docsSidebar').innerHTML = docSections.map(s => `
+        <div class="docs-sidebar-item ${s.id === activeDocId ? 'active' : ''}" onclick="selectDoc(${s.id})">
+            <span class="status-dot"></span>
+            <span style="flex:1">${esc(s.title)}</span>
+        </div>
+    `).join('') || '<div style="padding:16px;color:var(--text2);font-size:13px">No documentation yet</div>';
+}
+
+function selectDoc(id) {
+    activeDocId = id;
+    docEditMode = false;
+    const section = docSections.find(s => s.id === id);
+    if (!section) return;
+
+    renderDocSidebar();
+    document.getElementById('docsTitle').textContent = section.title;
+    document.getElementById('docsRendered').classList.remove('hidden');
+    document.getElementById('docsEditor').classList.add('hidden');
+    document.getElementById('docsRendered').innerHTML = renderMarkdown(section.content);
+
+    // Toolbar
+    const toolbar = document.getElementById('docsToolbar');
+    if (currentUser && currentUser.isManager) {
+        toolbar.innerHTML = `
+            <button class="btn btn-secondary btn-sm" onclick="editDoc()">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteDoc(${section.id})">Delete</button>
+        `;
+    } else {
+        toolbar.innerHTML = '';
+    }
+
+    // Footer
+    document.getElementById('docsFooter').textContent = section.updated_by
+        ? `Last updated by ${section.updated_by} on ${formatDate(section.updated_at)}`
+        : '';
+}
+
+function editDoc() {
+    const section = docSections.find(s => s.id === activeDocId);
+    if (!section) return;
+    docEditMode = true;
+    document.getElementById('docsRendered').classList.add('hidden');
+    document.getElementById('docsEditor').classList.remove('hidden');
+    document.getElementById('docsEditor').value = section.content;
+    document.getElementById('docsToolbar').innerHTML = `
+        <button class="btn btn-success btn-sm" onclick="saveDoc()">Save</button>
+        <button class="btn btn-secondary btn-sm" onclick="cancelEditDoc()">Cancel</button>
+    `;
+}
+
+async function saveDoc() {
+    const section = docSections.find(s => s.id === activeDocId);
+    if (!section) return;
+    const content = document.getElementById('docsEditor').value;
+    const titleInput = prompt('Section title:', section.title);
+    if (titleInput === null) return;
+
+    await api(`/api/docs/${section.id}`, 'PUT', {
+        title: titleInput || section.title,
+        content
+    });
+    await loadDocs();
+    selectDoc(section.id);
+}
+
+function cancelEditDoc() {
+    docEditMode = false;
+    selectDoc(activeDocId);
+}
+
+async function addDocSection() {
+    const title = prompt('New section title:');
+    if (!title) return;
+    const key = title.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const maxOrder = docSections.reduce((m, s) => Math.max(m, s.sort_order || 0), 0);
+    const result = await api('/api/docs', 'POST', {
+        section_key: key,
+        title,
+        content: `# ${title}\n\nAdd your documentation here...`,
+        sort_order: maxOrder + 1
+    });
+    if (result) {
+        await loadDocs();
+        selectDoc(result.id);
+        editDoc(); // Open in edit mode immediately
+    }
+}
+
+async function deleteDoc(id) {
+    if (!confirm('Delete this documentation section?')) return;
+    await api(`/api/docs/${id}`, 'DELETE');
+    activeDocId = null;
+    await loadDocs();
+}
+
+// Simple markdown renderer
+function renderMarkdown(md) {
+    if (!md) return '<p style="color:var(--text2)">Empty section</p>';
+    let html = md
+        // Code blocks
+        .replace(/```(\w*)\n([\s\S]*?)```/g, (m, lang, code) => `<pre><code>${esc(code.trim())}</code></pre>`)
+        // Inline code
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Headers
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        // Bold and italic
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        // Horizontal rule
+        .replace(/^---$/gm, '<hr>')
+        // Blockquote
+        .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+        // Links
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--blue)">$1</a>');
+
+    // Tables
+    html = html.replace(/^\|(.+)\|$/gm, (line) => {
+        const cells = line.split('|').filter(c => c.trim());
+        if (cells.every(c => /^[\s-:]+$/.test(c))) return '<!--separator-->';
+        return cells.map(c => c.trim()).join('|||');
+    });
+
+    // Process tables
+    const lines = html.split('\n');
+    let inTable = false;
+    let tableHtml = '';
+    let isHeader = true;
+    const result = [];
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.includes('|||') && !line.startsWith('<')) {
+            if (!inTable) { tableHtml = '<table>'; inTable = true; isHeader = true; }
+            const cells = line.split('|||');
+            const tag = isHeader ? 'th' : 'td';
+            tableHtml += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+            if (isHeader && i + 1 < lines.length && lines[i + 1] === '<!--separator-->') {
+                isHeader = false;
+                i++; // skip separator
+            }
+        } else {
+            if (inTable) { tableHtml += '</table>'; result.push(tableHtml); inTable = false; }
+            if (line === '<!--separator-->') continue;
+            // Lists
+            if (/^- (.+)$/.test(line)) {
+                result.push('<li>' + line.replace(/^- /, '') + '</li>');
+            } else if (/^\d+\. (.+)$/.test(line)) {
+                result.push('<li>' + line.replace(/^\d+\. /, '') + '</li>');
+            } else if (line.trim() === '') {
+                result.push('<br>');
+            } else if (!line.startsWith('<')) {
+                result.push('<p>' + line + '</p>');
+            } else {
+                result.push(line);
+            }
+        }
+    }
+    if (inTable) { tableHtml += '</table>'; result.push(tableHtml); }
+
+    // Wrap consecutive <li> in <ul>
+    let final = result.join('\n');
+    final = final.replace(/(<li>[\s\S]*?<\/li>(\n)?)+/g, (match) => '<ul>' + match + '</ul>');
+
+    return final;
 }
 
 // ==================== UTILS ====================

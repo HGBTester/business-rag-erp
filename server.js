@@ -34,6 +34,7 @@ app.use('/api/workflows', authRoutes.requireAuth, require('./routes/workflows'))
 app.use('/api/tasks', authRoutes.requireAuth, require('./routes/tasks'));
 app.use('/api/dashboard', authRoutes.requireAuth, require('./routes/dashboard'));
 app.use('/api/penalties', authRoutes.requireAuth, require('./routes/penalties'));
+app.use('/api/docs', authRoutes.requireAuth, require('./routes/docs'));
 
 // SPA fallback
 app.get('/', (req, res) => {
